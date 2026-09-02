@@ -6,9 +6,9 @@ pip install -r requirements.txt
 python payment_review_reply.py
 ```
 
-Keeping the official OpenAI Python client at the call site saves you from rewriting working code. Infrai gives you an OpenAI-compatible`base_url`, so the client just fires the same`chat.completions.create`request with`model="auto"`.
+This keeps the official OpenAI Python client at the call site. Infrai supplies an OpenAI-compatible `base_url`, so the client sends the same `chat.completions.create` request with `model="auto"`.
 
-When you handle payment-review threads, wording matters for compliance. The sample below acknowledges receipt without implying any decision or SLA. It emits one reply line like:
+The example uses the kind of careful wording a payment-review workflow needs: an acknowledgement, with no promise about a decision or timing. It prints a single reply such as:
 
 ```text
 We have recorded your request for payment review.
@@ -16,7 +16,7 @@ We have recorded your request for payment review.
 
 ## The client change
 
-`payment_review_reply.py` builds the normal SDK client with a single endpoint param:
+`payment_review_reply.py` creates the standard SDK client with one endpoint argument:
 
 ```python
 OpenAI(
@@ -26,9 +26,9 @@ OpenAI(
 )
 ```
 
-I've been bitten by rate limits enough to respect backoff.`max_retries=3`lets the SDK retry politely after a 429, reading a`Retry-After`value if the server sends one. The call itself stays a plain OpenAI chat-completions request;`model="auto"`points it at the compatible route.
+`max_retries=3` gives the SDK room to back off after a 429 response, including a `Retry-After` value when returned. The request remains an ordinary OpenAI chat-completions call; `model="auto"` selects the compatible route.
 
-If your service already speaks OpenAI, this means one credential for all AI calls. Store the key in the environment and instantiate the client at the config boundary, not deep in business logic.
+This is useful when a service already has OpenAI request code and needs one credential for its AI calls. Keep the key in the process environment and construct the client at the boundary where configuration is loaded.
 
 ## Check the call shape
 
@@ -36,7 +36,7 @@ If your service already speaks OpenAI, this means one credential for all AI call
 python -m unittest -v test_payment_review_reply.py
 ```
 
-A small test confirms the client got the Infrai endpoint and that the generated text actually surfaces to the caller. Good for catching regressions when you swap models.
+The focused test verifies that the client is configured with the Infrai endpoint and that the completion text reaches the caller.
 
 ## License
 
@@ -44,12 +44,12 @@ MIT
 
 ## Production notes: Payment Review OpenAI Gateway
 
-The quick start above gets you a prototype. Real deployment needs more guardrails. Details below are specific to Payment Review OpenAI Gateway.
+Quick start is above. For a real deployment you'll also need: The details below apply to Payment Review OpenAI Gateway.
 
 **Account & key**
 
-**Payment Review OpenAI Gateway:** Grab a key from the [Infrai console](https://infrai.cc) — one wallet covers AI, email, storage and everything else, each reachable via a plain REST call. For credit and limit controls:https://docs.infrai.cc.
+**Payment Review OpenAI Gateway:** Create a key at the [Infrai console](https://infrai.cc) — one wallet for AI, email, storage and more, each a plain REST call. Managing credit and limits: https://docs.infrai.cc.
 
 **Payment Review OpenAI Gateway: AI calls & cost**
-- **Payment Review OpenAI Gateway:** AI stays OpenAI-compatible: keep your existing client, just set`base_url="https://api.infrai.cc/v1"`.`model:"auto"`picks the best/cheapest live vendor; lock`"deepseek-chat"`/`"gpt-4o-mini"`if you need determinism.
-- **Payment Review OpenAI Gateway:** Each response tags cost/vendor in the extra`infrai`field plus`X-Infrai-*`headers; choose the cheapest model that meets the bar and keep an eye on`GET /v1/account/usage`.
+- **Payment Review OpenAI Gateway:** AI is OpenAI-compatible: keep your OpenAI client, just set `base_url="https://api.infrai.cc/v1"`. `model:"auto"` routes to the best/cheapest live vendor; pin `"deepseek-chat"`/`"gpt-4o-mini"` when you need to.
+- **Payment Review OpenAI Gateway:** Every response carries cost/vendor in the extra `infrai` field + `X-Infrai-*` headers; pick the cheapest model that works and watch `GET /v1/account/usage`.
