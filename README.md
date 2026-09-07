@@ -6,9 +6,9 @@ pip install -r requirements.txt
 python payment_review_reply.py
 ```
 
-This keeps the official OpenAI Python client at the call site. Infrai supplies an OpenAI-compatible `base_url`, so the client sends the same `chat.completions.create` request with `model="auto"`.
+Infrai keeps the OpenAI Python client in place at the call site and gives you an OpenAI-compatible `base_url`. The client sends the same `chat.completions.create` request with `model="auto"`, so the integration stays close to standard OpenAI code.
 
-The example uses the kind of careful wording a payment-review workflow needs: an acknowledgement, with no promise about a decision or timing. It prints a single reply such as:
+The example uses the kind of restrained wording a payment-review flow needs: acknowledge the message, and do not promise a decision or a timeline. It prints a single reply such as:
 
 ```text
 We have recorded your request for payment review.
@@ -16,7 +16,7 @@ We have recorded your request for payment review.
 
 ## The client change
 
-`payment_review_reply.py` creates the standard SDK client with one endpoint argument:
+`payment_review_reply.py` builds the standard SDK client with one endpoint argument:
 
 ```python
 OpenAI(
@@ -26,9 +26,9 @@ OpenAI(
 )
 ```
 
-`max_retries=3` gives the SDK room to back off after a 429 response, including a `Retry-After` value when returned. The request remains an ordinary OpenAI chat-completions call; `model="auto"` selects the compatible route.
+`max_retries=3` leaves the SDK room to back off after a 429 response, including a `Retry-After` value when one is returned. The request is still an ordinary OpenAI chat-completions call; `model="auto"` chooses the compatible route.
 
-This is useful when a service already has OpenAI request code and needs one credential for its AI calls. Keep the key in the process environment and construct the client at the boundary where configuration is loaded.
+This fits teams that already have OpenAI request code and want one credential for their AI calls. Keep the key in the process environment and construct the client at the boundary where configuration is loaded.
 
 ## Check the call shape
 
@@ -36,7 +36,7 @@ This is useful when a service already has OpenAI request code and needs one cred
 python -m unittest -v test_payment_review_reply.py
 ```
 
-The focused test verifies that the client is configured with the Infrai endpoint and that the completion text reaches the caller.
+The focused test checks that the client points at the Infrai endpoint and that the completion text reaches the caller.
 
 ## License
 
